@@ -1,0 +1,125 @@
+-- Movie table
+CREATE TABLE Movie (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    tmdbId INTEGER NOT NULL UNIQUE,
+    title TEXT NOT NULL,
+    originalTitle TEXT,
+    overview TEXT,
+    posterPath TEXT,
+    backdropPath TEXT,
+    releaseDate TEXT,
+    voteAverage REAL,
+    voteCount INTEGER,
+    popularity REAL,
+    originalLanguage TEXT,
+    adult INTEGER DEFAULT 0,
+    video INTEGER DEFAULT 0,
+    genreIds TEXT,
+    runtime INTEGER,
+    budget INTEGER,
+    revenue INTEGER,
+    status TEXT,
+    tagline TEXT,
+    dateAdded INTEGER NOT NULL
+);
+
+-- Rating table
+CREATE TABLE Rating (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    movieId INTEGER NOT NULL,
+    rating REAL NOT NULL,
+    review TEXT,
+    watchedDate INTEGER NOT NULL,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    FOREIGN KEY (movieId) REFERENCES Movie(id) ON DELETE CASCADE
+);
+
+-- Genre table for caching
+CREATE TABLE Genre (
+    id INTEGER PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL
+);
+
+-- Queries for Movie
+insertMovie:
+INSERT OR REPLACE INTO Movie(tmdbId, title, originalTitle, overview, posterPath, backdropPath, releaseDate, voteAverage, voteCount, popularity, originalLanguage, adult, video, genreIds, runtime, budget, revenue, status, tagline, dateAdded)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+getMovieById:
+SELECT * FROM Movie WHERE id = ?;
+
+getMovieByTmdbId:
+SELECT * FROM Movie WHERE tmdbId = ?;
+
+getAllWatchedMovies:
+SELECT * FROM Movie ORDER BY dateAdded DESC;
+
+searchWatchedMovies:
+SELECT * FROM Movie WHERE title LIKE '%' || ? || '%' ORDER BY title ASC;
+
+deleteMovie:
+DELETE FROM Movie WHERE id = ?;
+
+getMovieCount:
+SELECT COUNT(*) FROM Movie;
+
+-- Queries for Rating
+insertRating:
+INSERT INTO Rating(movieId, rating, review, watchedDate, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?, ?);
+
+updateRating:
+UPDATE Rating SET rating = ?, review = ?, updatedAt = ? WHERE id = ?;
+
+getRatingById:
+SELECT * FROM Rating WHERE id = ?;
+
+getRatingsByMovieId:
+SELECT * FROM Rating WHERE movieId = ? ORDER BY watchedDate DESC;
+
+getAllRatings:
+SELECT * FROM Rating ORDER BY watchedDate DESC;
+
+deleteRating:
+DELETE FROM Rating WHERE id = ?;
+
+getAverageRating:
+SELECT AVG(rating) FROM Rating;
+
+getRatingCount:
+SELECT COUNT(*) FROM Rating;
+
+-- Get movies with ratings
+getMoviesWithRatings:
+SELECT
+    m.*,
+    r.id AS ratingId,
+    r.rating,
+    r.review,
+    r.watchedDate,
+    r.createdAt AS ratingCreatedAt,
+    r.updatedAt AS ratingUpdatedAt
+FROM Movie m
+LEFT JOIN Rating r ON m.id = r.movieId
+ORDER BY m.dateAdded DESC;
+
+getTopRatedMovies:
+SELECT
+    m.*,
+    r.rating
+FROM Movie m
+INNER JOIN Rating r ON m.id = r.movieId
+WHERE r.rating >= ?
+ORDER BY r.rating DESC, m.dateAdded DESC
+LIMIT ?;
+
+-- Genre queries
+insertGenre:
+INSERT OR REPLACE INTO Genre(id, name) VALUES (?, ?);
+
+getAllGenres:
+SELECT * FROM Genre ORDER BY name ASC;
+
+getGenreById:
+SELECT * FROM Genre WHERE id = ?;
