@@ -1,0 +1,17 @@
+package com.cinescope.cinescope.data.remote.dto
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class EpisodeDto(
+    @SerialName("id") val id: Int,
+    @SerialName("episode_number") val episodeNumber: Int,
+    @SerialName("season_number") val seasonNumber: Int,
+    @SerialName("name") val name: String,
+    @SerialName("overview") val overview: String? = null,
+    @SerialName("still_path") val stillPath: String? = null,
+    @SerialName("air_date") val airDate: String? = null,
+    @SerialName("runtime") val runtime: Int? = null,
+    @SerialName("vote_average") val voteAverage: Double? = null
+)
