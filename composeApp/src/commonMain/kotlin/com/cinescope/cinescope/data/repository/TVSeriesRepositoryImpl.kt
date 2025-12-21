@@ -10,11 +10,12 @@ import com.cinescope.cinescope.domain.model.TVSeries
 import com.cinescope.cinescope.domain.repository.TVSeriesRepository
 import com.cinescope.cinescope.domain.util.NetworkError
 import com.cinescope.cinescope.domain.util.Result
+import com.cinescope.cinescope.domain.util.TimeProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.datetime.Clock
 
+@OptIn(kotlin.time.ExperimentalTime::class)
 class TVSeriesRepositoryImpl(
     private val tmdbApiClient: TmdbApiClient,
     private val database: CineScopeDatabase
@@ -139,7 +140,7 @@ class TVSeriesRepositoryImpl(
                 tagline = series.tagline,
                 type = series.type,
                 inProduction = if (series.inProduction) 1L else 0L,
-                dateAdded = Clock.System.now().toEpochMilliseconds()
+                dateAdded = TimeProvider.now().toEpochMilliseconds()
             )
 
             val saved = database.cineScopeDatabaseQueries
