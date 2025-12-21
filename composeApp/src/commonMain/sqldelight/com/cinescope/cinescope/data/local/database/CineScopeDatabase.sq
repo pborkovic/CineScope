@@ -23,16 +23,20 @@ CREATE TABLE Movie (
     dateAdded INTEGER NOT NULL
 );
 
--- Rating table
+-- Rating table (supports both movies and TV series)
 CREATE TABLE Rating (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-    movieId INTEGER NOT NULL,
+    movieId INTEGER,
+    tvSeriesId INTEGER,
+    contentType TEXT NOT NULL DEFAULT 'movie',
     rating REAL NOT NULL,
     review TEXT,
     watchedDate INTEGER NOT NULL,
     createdAt INTEGER NOT NULL,
     updatedAt INTEGER NOT NULL,
-    FOREIGN KEY (movieId) REFERENCES Movie(id) ON DELETE CASCADE
+    FOREIGN KEY (movieId) REFERENCES Movie(id) ON DELETE CASCADE,
+    FOREIGN KEY (tvSeriesId) REFERENCES TVSeries(id) ON DELETE CASCADE,
+    CHECK ((movieId IS NOT NULL AND tvSeriesId IS NULL) OR (movieId IS NULL AND tvSeriesId IS NOT NULL))
 );
 
 -- Genre table for caching
@@ -66,8 +70,8 @@ SELECT COUNT(*) FROM Movie;
 
 -- Queries for Rating
 insertRating:
-INSERT INTO Rating(movieId, rating, review, watchedDate, createdAt, updatedAt)
-VALUES (?, ?, ?, ?, ?, ?);
+INSERT INTO Rating(movieId, tvSeriesId, contentType, rating, review, watchedDate, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
 updateRating:
 UPDATE Rating SET rating = ?, review = ?, updatedAt = ? WHERE id = ?;
@@ -78,6 +82,9 @@ SELECT * FROM Rating WHERE id = ?;
 getRatingsByMovieId:
 SELECT * FROM Rating WHERE movieId = ? ORDER BY watchedDate DESC;
 
+getRatingsByTVSeriesId:
+SELECT * FROM Rating WHERE tvSeriesId = ? ORDER BY watchedDate DESC;
+
 getAllRatings:
 SELECT * FROM Rating ORDER BY watchedDate DESC;
 
@@ -85,7 +92,7 @@ deleteRating:
 DELETE FROM Rating WHERE id = ?;
 
 getAverageRating:
-SELECT AVG(rating) FROM Rating;
+SELECT AVG(rating) AS average FROM Rating;
 
 getRatingCount:
 SELECT COUNT(*) FROM Rating;
@@ -123,3 +130,148 @@ SELECT * FROM Genre ORDER BY name ASC;
 
 getGenreById:
 SELECT * FROM Genre WHERE id = ?;
+
+-- TVSeries table
+CREATE TABLE TVSeries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    tmdbId INTEGER NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    originalName TEXT,
+    overview TEXT,
+    posterPath TEXT,
+    backdropPath TEXT,
+    firstAirDate TEXT,
+    lastAirDate TEXT,
+    voteAverage REAL,
+    voteCount INTEGER,
+    popularity REAL,
+    originalLanguage TEXT,
+    adult INTEGER DEFAULT 0,
+    genreIds TEXT,
+    numberOfSeasons INTEGER,
+    numberOfEpisodes INTEGER,
+    status TEXT,
+    tagline TEXT,
+    type TEXT,
+    inProduction INTEGER DEFAULT 0,
+    dateAdded INTEGER NOT NULL
+);
+
+-- Season table
+CREATE TABLE Season (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    tvSeriesId INTEGER NOT NULL,
+    seasonNumber INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    overview TEXT,
+    posterPath TEXT,
+    airDate TEXT,
+    episodeCount INTEGER NOT NULL,
+    FOREIGN KEY (tvSeriesId) REFERENCES TVSeries(id) ON DELETE CASCADE,
+    UNIQUE(tvSeriesId, seasonNumber)
+);
+
+-- Episode table
+CREATE TABLE Episode (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    tvSeriesId INTEGER NOT NULL,
+    seasonNumber INTEGER NOT NULL,
+    episodeNumber INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    overview TEXT,
+    stillPath TEXT,
+    airDate TEXT,
+    runtime INTEGER,
+    voteAverage REAL,
+    watched INTEGER DEFAULT 0,
+    FOREIGN KEY (tvSeriesId) REFERENCES TVSeries(id) ON DELETE CASCADE,
+    UNIQUE(tvSeriesId, seasonNumber, episodeNumber)
+);
+
+-- TVSeries queries
+insertTVSeries:
+INSERT OR REPLACE INTO TVSeries(tmdbId, name, originalName, overview, posterPath, backdropPath, firstAirDate, lastAirDate, voteAverage, voteCount, popularity, originalLanguage, adult, genreIds, numberOfSeasons, numberOfEpisodes, status, tagline, type, inProduction, dateAdded)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+getTVSeriesById:
+SELECT * FROM TVSeries WHERE id = ?;
+
+getTVSeriesByTmdbId:
+SELECT * FROM TVSeries WHERE tmdbId = ?;
+
+getAllWatchedTVSeries:
+SELECT * FROM TVSeries ORDER BY dateAdded DESC;
+
+searchWatchedTVSeries:
+SELECT * FROM TVSeries WHERE name LIKE '%' || ? || '%' ORDER BY name ASC;
+
+deleteTVSeries:
+DELETE FROM TVSeries WHERE id = ?;
+
+getTVSeriesCount:
+SELECT COUNT(*) FROM TVSeries;
+
+-- Season queries
+insertSeason:
+INSERT OR REPLACE INTO Season(tvSeriesId, seasonNumber, name, overview, posterPath, airDate, episodeCount)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+getSeasonById:
+SELECT * FROM Season WHERE id = ?;
+
+getSeasonsByTVSeriesId:
+SELECT * FROM Season WHERE tvSeriesId = ? ORDER BY seasonNumber ASC;
+
+getSeasonByNumber:
+SELECT * FROM Season WHERE tvSeriesId = ? AND seasonNumber = ?;
+
+-- Episode queries
+insertEpisode:
+INSERT OR REPLACE INTO Episode(tvSeriesId, seasonNumber, episodeNumber, name, overview, stillPath, airDate, runtime, voteAverage, watched)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+getEpisodeById:
+SELECT * FROM Episode WHERE id = ?;
+
+getEpisodesByTVSeriesAndSeason:
+SELECT * FROM Episode WHERE tvSeriesId = ? AND seasonNumber = ? ORDER BY episodeNumber ASC;
+
+getEpisodeByNumber:
+SELECT * FROM Episode WHERE tvSeriesId = ? AND seasonNumber = ? AND episodeNumber = ?;
+
+markEpisodeAsWatched:
+UPDATE Episode SET watched = ? WHERE id = ?;
+
+getWatchedEpisodesCount:
+SELECT COUNT(*) FROM Episode WHERE tvSeriesId = ? AND watched = 1;
+
+-- Watchlist table
+CREATE TABLE Watchlist (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    tmdbId INTEGER NOT NULL,
+    contentType TEXT NOT NULL,
+    title TEXT NOT NULL,
+    posterPath TEXT,
+    dateAdded INTEGER NOT NULL,
+    UNIQUE(tmdbId, contentType)
+);
+
+-- Watchlist queries
+insertWatchlistItem:
+INSERT OR REPLACE INTO Watchlist(tmdbId, contentType, title, posterPath, dateAdded)
+VALUES (?, ?, ?, ?, ?);
+
+getAllWatchlistItems:
+SELECT * FROM Watchlist ORDER BY dateAdded DESC;
+
+getWatchlistItemByTmdbId:
+SELECT * FROM Watchlist WHERE tmdbId = ? AND contentType = ?;
+
+deleteWatchlistItem:
+DELETE FROM Watchlist WHERE id = ?;
+
+deleteWatchlistItemByTmdbId:
+DELETE FROM Watchlist WHERE tmdbId = ? AND contentType = ?;
+
+getWatchlistCount:
+SELECT COUNT(*) FROM Watchlist;
