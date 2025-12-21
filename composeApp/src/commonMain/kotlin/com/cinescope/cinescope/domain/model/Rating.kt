@@ -2,6 +2,7 @@ package com.cinescope.cinescope.domain.model
 
 import kotlinx.datetime.Instant
 
+@OptIn(kotlin.time.ExperimentalTime::class)
 /**
  * Represents a user's rating for a movie in the CineScope application.
  *
