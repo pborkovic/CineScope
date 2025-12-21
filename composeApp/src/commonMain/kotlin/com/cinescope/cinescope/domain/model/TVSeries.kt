@@ -2,6 +2,7 @@ package com.cinescope.cinescope.domain.model
 
 import kotlinx.datetime.Instant
 
+@OptIn(kotlin.time.ExperimentalTime::class)
 /**
  * Represents a TV series entity in the CineScope application.
  *
