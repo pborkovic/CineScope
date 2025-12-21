@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
+@OptIn(kotlin.time.ExperimentalTime::class)
 class WatchlistRepositoryImpl(
     private val database: CineScopeDatabase
 ) : WatchlistRepository {
