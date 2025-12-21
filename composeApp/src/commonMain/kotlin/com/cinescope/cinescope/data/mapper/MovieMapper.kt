@@ -3,7 +3,7 @@ package com.cinescope.cinescope.data.mapper
 import com.cinescope.cinescope.data.remote.dto.MovieDetailsDto
 import com.cinescope.cinescope.data.remote.dto.MovieDto
 import com.cinescope.cinescope.domain.model.Movie
-import kotlinx.datetime.Clock
+import com.cinescope.cinescope.domain.util.TimeProvider
 
 object MovieMapper {
     fun MovieDto.toDomain(): Movie {
@@ -22,7 +22,7 @@ object MovieMapper {
             adult = adult,
             video = video,
             genreIds = genreIds,
-            dateAdded = Clock.System.now()
+            dateAdded = TimeProvider.now()
         )
     }
 
@@ -47,7 +47,7 @@ object MovieMapper {
             revenue = revenue,
             status = status,
             tagline = tagline,
-            dateAdded = Clock.System.now()
+            dateAdded = TimeProvider.now()
         )
     }
 }
