@@ -7,11 +7,12 @@ import com.cinescope.cinescope.domain.model.Rating
 import com.cinescope.cinescope.domain.repository.RatingRepository
 import com.cinescope.cinescope.domain.util.NetworkError
 import com.cinescope.cinescope.domain.util.Result
+import com.cinescope.cinescope.domain.util.TimeProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.datetime.Clock
 
+@OptIn(kotlin.time.ExperimentalTime::class)
 class RatingRepositoryImpl(
     private val database: CineScopeDatabase
 ) : RatingRepository {
@@ -25,8 +26,8 @@ class RatingRepositoryImpl(
                 rating = rating.rating,
                 review = rating.review,
                 watchedDate = rating.watchedDate.toEpochMilliseconds(),
-                createdAt = Clock.System.now().toEpochMilliseconds(),
-                updatedAt = Clock.System.now().toEpochMilliseconds()
+                createdAt = TimeProvider.now().toEpochMilliseconds(),
+                updatedAt = TimeProvider.now().toEpochMilliseconds()
             )
             Result.Success(rating.id)
         } catch (e: Exception) {
@@ -39,7 +40,7 @@ class RatingRepositoryImpl(
             database.cineScopeDatabaseQueries.updateRating(
                 rating = rating.rating,
                 review = rating.review,
-                updatedAt = Clock.System.now().toEpochMilliseconds(),
+                updatedAt = TimeProvider.now().toEpochMilliseconds(),
                 id = rating.id
             )
             Result.Success(Unit)
