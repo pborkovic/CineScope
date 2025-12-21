@@ -2,6 +2,7 @@ package com.cinescope.cinescope.domain.model
 
 import kotlinx.datetime.Instant
 
+@OptIn(kotlin.time.ExperimentalTime::class)
 /**
  * Sealed interface representing any type of watchable content in CineScope.
  *
@@ -61,6 +62,7 @@ sealed interface Content {
  * @property movie The underlying movie instance
  * @constructor Creates a MovieContent wrapper around a movie
  */
+@OptIn(kotlin.time.ExperimentalTime::class)
 data class MovieContent(val movie: Movie) : Content {
     override val id: Long get() = movie.id
     override val tmdbId: Int get() = movie.tmdbId
@@ -86,6 +88,7 @@ data class MovieContent(val movie: Movie) : Content {
  * @property series The underlying TV series instance
  * @constructor Creates a TVSeriesContent wrapper around a TV series
  */
+@OptIn(kotlin.time.ExperimentalTime::class)
 data class TVSeriesContent(val series: TVSeries) : Content {
     override val id: Long get() = series.id
     override val tmdbId: Int get() = series.tmdbId
