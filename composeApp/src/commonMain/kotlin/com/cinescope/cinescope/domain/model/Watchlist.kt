@@ -2,6 +2,7 @@ package com.cinescope.cinescope.domain.model
 
 import kotlinx.datetime.Instant
 
+@OptIn(kotlin.time.ExperimentalTime::class)
 /**
  * Represents an item in the user's watchlist for future viewing.
  *
