@@ -41,4 +41,8 @@ val repositoryModule = module {
             recommendationEngine = get()
         )
     }
+
+    single<UserProfileRepository> {
+        UserProfileRepositoryImpl(database = get())
+    }
 }
