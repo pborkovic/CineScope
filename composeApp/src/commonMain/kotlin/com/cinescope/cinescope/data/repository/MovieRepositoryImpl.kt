@@ -167,4 +167,30 @@ class MovieRepositoryImpl(
             0L
         }
     }
+
+    override suspend fun getPopularMovies(page: Int): Result<List<Movie>> {
+        return safeApiCall {
+            tmdbApiClient.getPopularMovies(page)
+                .let { result ->
+                    when (result) {
+                        is Result.Success -> result.data.results.map { it.toDomain() }
+                        is Result.Error -> throw Exception(result.error.toString())
+                        is Result.Loading -> emptyList()
+                    }
+                }
+        }
+    }
+
+    override suspend fun getTrendingMovies(timeWindow: String): Result<List<Movie>> {
+        return safeApiCall {
+            tmdbApiClient.getTrendingMovies(timeWindow)
+                .let { result ->
+                    when (result) {
+                        is Result.Success -> result.data.results.map { it.toDomain() }
+                        is Result.Error -> throw Exception(result.error.toString())
+                        is Result.Loading -> emptyList()
+                    }
+                }
+        }
+    }
 }
