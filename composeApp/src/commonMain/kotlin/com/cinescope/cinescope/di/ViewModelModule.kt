@@ -4,6 +4,7 @@ import com.cinescope.cinescope.presentation.screens.details.DetailsViewModel
 import com.cinescope.cinescope.presentation.screens.home.HomeViewModel
 import com.cinescope.cinescope.presentation.screens.search.SearchViewModel
 import com.cinescope.cinescope.presentation.screens.recommendations.RecommendationsViewModel
+import com.cinescope.cinescope.presentation.screens.settings.SettingsViewModel
 import com.cinescope.cinescope.presentation.screens.statistics.StatisticsViewModel
 import com.cinescope.cinescope.presentation.screens.watchlist.WatchlistViewModel
 import org.koin.core.module.dsl.viewModelOf
@@ -16,4 +17,5 @@ val viewModelModule = module {
     viewModelOf(::RecommendationsViewModel)
     viewModelOf(::StatisticsViewModel)
     viewModelOf(::WatchlistViewModel)
+    viewModelOf(::SettingsViewModel)
 }
