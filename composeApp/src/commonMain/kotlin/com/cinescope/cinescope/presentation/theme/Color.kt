@@ -33,6 +33,13 @@ object CineScopeColors {
     val RatingEmptyDark = Color(0xFF48484A)
     val GradientStart = Color(0xFF667EEA)
     val GradientEnd = Color(0xFF764BA2)
+
+    // Apple-style card and UI colors
+    val AppleWhite = Color(0xFFFFFFFF)
+    val CineScopeCardBackground = Color(0xFFFAFAFA)
+    val AppleDivider = Color(0xFFE5E5E5)
+    val AppleTextPrimary = Color(0xFF000000)
+    val AppleTextSecondary = Color(0xFF6C6C70)
 }
 
 val LightColorScheme = lightColorScheme(
