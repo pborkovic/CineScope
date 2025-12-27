@@ -2,12 +2,8 @@ package com.cinescope.cinescope.presentation.navigation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
@@ -16,6 +12,7 @@ import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Recommend
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -29,10 +26,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.cinescope.cinescope.presentation.components.FloatingTabBar
+import com.cinescope.cinescope.presentation.components.TabBarItem
 import com.cinescope.cinescope.presentation.screens.details.DetailsScreen
 import com.cinescope.cinescope.presentation.screens.home.HomeScreen
 import com.cinescope.cinescope.presentation.screens.search.SearchScreen
 import com.cinescope.cinescope.presentation.screens.recommendations.RecommendationsScreen
+import com.cinescope.cinescope.presentation.screens.settings.SettingsScreen
 import com.cinescope.cinescope.presentation.screens.statistics.StatisticsScreen
 import com.cinescope.cinescope.presentation.screens.watchlist.WatchlistScreen
 
@@ -40,15 +40,11 @@ import com.cinescope.cinescope.presentation.screens.watchlist.WatchlistScreen
 fun AppNavigation() {
     val navController = rememberNavController()
 
-    Scaffold(
-        bottomBar = {
-            BottomNavigationBar(navController)
-        }
-    ) { paddingValues ->
+    Box(modifier = Modifier.fillMaxSize()) {
         NavHost(
             navController = navController,
             startDestination = Screen.Home.route,
-            modifier = Modifier.padding(paddingValues)
+            modifier = Modifier.fillMaxSize()
         ) {
             composable(Screen.Home.route) {
                 HomeScreen(
@@ -115,6 +111,19 @@ fun AppNavigation() {
                     }
                 )
             }
+
+            composable(Screen.Settings.route) {
+                SettingsScreen()
+            }
+        }
+
+        // Floating tab bar overlay
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+        ) {
+            BottomNavigationBar(navController)
         }
     }
 }
@@ -124,84 +133,47 @@ fun BottomNavigationBar(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface
-    ) {
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-            label = { Text("Home") },
-            selected = currentDestination?.hierarchy?.any { it.route == Screen.Home.route } == true,
-            onClick = {
-                navController.navigate(Screen.Home.route) {
-                    popUpTo(navController.graph.findStartDestination().id) {
-                        saveState = true
-                    }
-                    launchSingleTop = true
-                    restoreState = true
-                }
-            }
+    val tabBarItems = listOf(
+        TabBarItem(
+            route = Screen.Home.route,
+            icon = Icons.Default.Home,
+            label = "Home"
+        ),
+        TabBarItem(
+            route = Screen.Search.route,
+            icon = Icons.Default.Search,
+            label = "Search"
+        ),
+        TabBarItem(
+            route = Screen.Recommendations.route,
+            icon = Icons.Default.Recommend,
+            label = "Discover"
+        ),
+        TabBarItem(
+            route = Screen.Watchlist.route,
+            icon = Icons.Default.Bookmarks,
+            label = "Watchlist"
+        ),
+        TabBarItem(
+            route = Screen.Settings.route,
+            icon = Icons.Default.Settings,
+            label = "Settings"
         )
+    )
 
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-            label = { Text("Search") },
-            selected = currentDestination?.hierarchy?.any { it.route == Screen.Search.route } == true,
-            onClick = {
-                navController.navigate(Screen.Search.route) {
-                    popUpTo(navController.graph.findStartDestination().id) {
-                        saveState = true
-                    }
-                    launchSingleTop = true
-                    restoreState = true
+    FloatingTabBar(
+        items = tabBarItems,
+        selectedRoute = currentDestination?.route,
+        onItemClick = { item ->
+            navController.navigate(item.route) {
+                popUpTo(navController.graph.findStartDestination().id) {
+                    saveState = true
                 }
+                launchSingleTop = true
+                restoreState = true
             }
-        )
-
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Recommend, contentDescription = "Discover") },
-            label = { Text("Discover") },
-            selected = currentDestination?.hierarchy?.any { it.route == Screen.Recommendations.route } == true,
-            onClick = {
-                navController.navigate(Screen.Recommendations.route) {
-                    popUpTo(navController.graph.findStartDestination().id) {
-                        saveState = true
-                    }
-                    launchSingleTop = true
-                    restoreState = true
-                }
-            }
-        )
-
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Bookmarks, contentDescription = "Watchlist") },
-            label = { Text("Watchlist") },
-            selected = currentDestination?.hierarchy?.any { it.route == Screen.Watchlist.route } == true,
-            onClick = {
-                navController.navigate(Screen.Watchlist.route) {
-                    popUpTo(navController.graph.findStartDestination().id) {
-                        saveState = true
-                    }
-                    launchSingleTop = true
-                    restoreState = true
-                }
-            }
-        )
-
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Analytics, contentDescription = "Stats") },
-            label = { Text("Stats") },
-            selected = currentDestination?.hierarchy?.any { it.route == Screen.Statistics.route } == true,
-            onClick = {
-                navController.navigate(Screen.Statistics.route) {
-                    popUpTo(navController.graph.findStartDestination().id) {
-                        saveState = true
-                    }
-                    launchSingleTop = true
-                    restoreState = true
-                }
-            }
-        )
-    }
+        }
+    )
 }
 
 @Composable
