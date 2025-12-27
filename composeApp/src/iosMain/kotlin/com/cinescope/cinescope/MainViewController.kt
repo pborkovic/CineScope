@@ -10,9 +10,11 @@ fun MainViewController() = ComposeUIViewController {
 }
 
 private fun initKoin() {
-    if (org.koin.core.context.GlobalContext.getOrNull() == null) {
+    try {
         startKoin {
             modules(appModule)
         }
+    } catch (e: Exception) {
+        // Koin already started, ignore
     }
 }
