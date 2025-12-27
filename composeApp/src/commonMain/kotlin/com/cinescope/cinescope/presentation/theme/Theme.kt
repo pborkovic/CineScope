@@ -25,6 +25,22 @@ val LocalGlassColors = staticCompositionLocalOf {
     )
 }
 
+data class ThemeColors(
+    val cardBackground: Color,
+    val textPrimary: Color,
+    val textSecondary: Color,
+    val divider: Color
+)
+
+val LocalThemeColors = staticCompositionLocalOf {
+    ThemeColors(
+        cardBackground = CineScopeColors.AppleWhite,
+        textPrimary = CineScopeColors.AppleTextPrimary,
+        textSecondary = CineScopeColors.AppleTextSecondary,
+        divider = CineScopeColors.AppleDivider
+    )
+}
+
 @Composable
 fun CineScopeTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -50,8 +66,25 @@ fun CineScopeTheme(
         )
     }
 
+    val themeColors = if (darkTheme) {
+        ThemeColors(
+            cardBackground = CineScopeColors.SurfaceDark,
+            textPrimary = CineScopeColors.OnSurfaceDark,
+            textSecondary = CineScopeColors.OnSurfaceVariantDark,
+            divider = Color(0xFF38383A)
+        )
+    } else {
+        ThemeColors(
+            cardBackground = CineScopeColors.AppleWhite,
+            textPrimary = CineScopeColors.AppleTextPrimary,
+            textSecondary = CineScopeColors.AppleTextSecondary,
+            divider = CineScopeColors.AppleDivider
+        )
+    }
+
     CompositionLocalProvider(
-        LocalGlassColors provides glassColors
+        LocalGlassColors provides glassColors,
+        LocalThemeColors provides themeColors
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
@@ -66,4 +99,8 @@ object CineScopeTheme {
     val glassColors: GlassColors
         @Composable
         get() = LocalGlassColors.current
+
+    val colors: ThemeColors
+        @Composable
+        get() = LocalThemeColors.current
 }
