@@ -1,0 +1,50 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradFilm" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6A5CFF"/>
+      <stop offset="100%" stop-color="#C77DFF"/>
+    </linearGradient>
+
+    <linearGradient id="gradLens" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF7A18"/>
+      <stop offset="100%" stop-color="#FFB347"/>
+    </linearGradient>
+
+    <linearGradient id="gradText" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#FF9F43"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="64" fill="#1B132A"/>
+
+  <!-- Film Reel -->
+  <circle cx="240" cy="220" r="90" fill="url(#gradFilm)"/>
+  <circle cx="240" cy="220" r="12" fill="#FFFFFF"/>
+  <circle cx="240" cy="180" r="10" fill="#FFFFFF"/>
+  <circle cx="240" cy="260" r="10" fill="#FFFFFF"/>
+  <circle cx="200" cy="220" r="10" fill="#FFFFFF"/>
+  <circle cx="280" cy="220" r="10" fill="#FFFFFF"/>
+
+  <!-- Film Strip -->
+  <rect x="150" y="280" width="180" height="40" rx="20" fill="#4CC9F0"/>
+  <rect x="165" y="292" width="20" height="16" rx="4" fill="#1B132A"/>
+  <rect x="205" y="292" width="20" height="16" rx="4" fill="#1B132A"/>
+  <rect x="245" y="292" width="20" height="16" rx="4" fill="#1B132A"/>
+  <rect x="285" y="292" width="20" height="16" rx="4" fill="#1B132A"/>
+
+  <!-- Magnifying Glass -->
+  <circle cx="310" cy="250" r="38" fill="#2A1E3F" stroke="url(#gradLens)" stroke-width="8"/>
+  <rect x="338" y="278" width="14" height="52" rx="7"
+        transform="rotate(45 338 278)" fill="url(#gradLens)"/>
+
+  <!-- App Name -->
+  <text x="256" y="400" text-anchor="middle"
+        font-size="56"
+        font-family="Poppins, Inter, Arial, sans-serif"
+        font-weight="600"
+        fill="url(#gradText)">
+    CineScope
+  </text>
+</svg>
