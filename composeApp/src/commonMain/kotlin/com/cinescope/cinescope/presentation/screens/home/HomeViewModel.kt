@@ -4,17 +4,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cinescope.cinescope.domain.model.Movie
 import com.cinescope.cinescope.domain.repository.MovieRepository
+import com.cinescope.cinescope.domain.repository.UserProfileRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 data class HomeUiState(
     val recentMovies: List<Movie> = emptyList(),
     val totalMoviesWatched: Long = 0,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val userName: String? = null
 )
 
 class HomeViewModel(
-    private val movieRepository: MovieRepository
+    private val movieRepository: MovieRepository,
+    private val userProfileRepository: UserProfileRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -22,6 +25,21 @@ class HomeViewModel(
 
     init {
         loadHomeData()
+        loadUserProfile()
+    }
+
+    private fun loadUserProfile() {
+        viewModelScope.launch {
+            try {
+                userProfileRepository.getUserProfile()
+                    .catch { /* Ignore errors */ }
+                    .collect { profile ->
+                        _uiState.update { it.copy(userName = profile.name) }
+                    }
+            } catch (e: Exception) {
+                // Ignore errors
+            }
+        }
     }
 
     private fun loadHomeData() {
