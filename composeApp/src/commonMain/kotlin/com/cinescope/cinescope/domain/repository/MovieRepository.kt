@@ -124,4 +124,29 @@ interface MovieRepository {
      * @see getWatchedMovies
      */
     suspend fun getMovieCount(): Long
+
+    /**
+     * Retrieves popular movies from TMDB.
+     *
+     * Fetches a list of currently popular movies from the TMDB API.
+     * Useful for recommendation candidates and discovery features.
+     *
+     * @param page Page number to fetch (default 1)
+     * @return [Result.Success] containing list of popular movies, or [Result.Error] on failure
+     *
+     * @see getTrendingMovies
+     */
+    suspend fun getPopularMovies(page: Int = 1): Result<List<Movie>>
+
+    /**
+     * Retrieves trending movies from TMDB.
+     *
+     * Fetches movies that are currently trending on TMDB within the specified time window.
+     *
+     * @param timeWindow Time window for trending: "day" or "week" (default "week")
+     * @return [Result.Success] containing list of trending movies, or [Result.Error] on failure
+     *
+     * @see getPopularMovies
+     */
+    suspend fun getTrendingMovies(timeWindow: String = "week"): Result<List<Movie>>
 }
