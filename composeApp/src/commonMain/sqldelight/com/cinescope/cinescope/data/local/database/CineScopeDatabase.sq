@@ -275,3 +275,25 @@ DELETE FROM Watchlist WHERE tmdbId = ? AND contentType = ?;
 
 getWatchlistCount:
 SELECT COUNT(*) FROM Watchlist;
+
+-- UserProfile table
+CREATE TABLE UserProfile (
+    id INTEGER PRIMARY KEY NOT NULL DEFAULT 1,
+    name TEXT,
+    profilePicturePath TEXT,
+    CHECK (id = 1)
+);
+
+-- UserProfile queries
+insertOrUpdateUserProfile:
+INSERT OR REPLACE INTO UserProfile(id, name, profilePicturePath)
+VALUES (1, ?, ?);
+
+getUserProfile:
+SELECT * FROM UserProfile WHERE id = 1;
+
+updateUserName:
+UPDATE UserProfile SET name = ? WHERE id = 1;
+
+updateUserProfilePicture:
+UPDATE UserProfile SET profilePicturePath = ? WHERE id = 1;
