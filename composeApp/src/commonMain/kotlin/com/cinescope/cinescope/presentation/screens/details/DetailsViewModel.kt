@@ -3,13 +3,18 @@ package com.cinescope.cinescope.presentation.screens.details
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cinescope.cinescope.domain.model.Movie
-import com.cinescope.cinescope.domain.model.Rating
-import com.cinescope.cinescope.domain.model.WatchlistItem
 import com.cinescope.cinescope.domain.repository.MovieRepository
 import com.cinescope.cinescope.domain.repository.RatingRepository
 import com.cinescope.cinescope.domain.repository.WatchlistRepository
+import com.cinescope.cinescope.domain.usecase.rating.AddRatingUseCase
+import com.cinescope.cinescope.domain.usecase.rating.UpdateRatingUseCase
+import com.cinescope.cinescope.domain.usecase.rating.DeleteRatingUseCase
+import com.cinescope.cinescope.domain.usecase.watchlist.AddToWatchlistUseCase
+import com.cinescope.cinescope.domain.usecase.watchlist.RemoveFromWatchlistUseCase
+import com.cinescope.cinescope.domain.util.NetworkError
 import com.cinescope.cinescope.domain.util.Result
-import com.cinescope.cinescope.domain.util.TimeProvider
+import com.cinescope.cinescope.presentation.mapper.RatingPresentationMapper
+import com.cinescope.cinescope.presentation.model.RatingUi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +26,7 @@ sealed interface DetailsUiState {
     data object Loading : DetailsUiState
     data class Success(
         val movie: Movie,
-        val userRating: Double? = null,
+        val userRating: RatingUi? = null,
         val isInWatchlist: Boolean = false
     ) : DetailsUiState
     data class Error(val message: String) : DetailsUiState
@@ -30,7 +35,12 @@ sealed interface DetailsUiState {
 class DetailsViewModel(
     private val movieRepository: MovieRepository,
     private val watchlistRepository: WatchlistRepository,
-    private val ratingRepository: RatingRepository
+    private val ratingRepository: RatingRepository,
+    private val addRatingUseCase: AddRatingUseCase,
+    private val updateRatingUseCase: UpdateRatingUseCase,
+    private val deleteRatingUseCase: DeleteRatingUseCase,
+    private val addToWatchlistUseCase: AddToWatchlistUseCase,
+    private val removeFromWatchlistUseCase: RemoveFromWatchlistUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<DetailsUiState>(DetailsUiState.Loading)
@@ -46,9 +56,8 @@ class DetailsViewModel(
             when (val result = movieRepository.getMovieDetails(tmdbId)) {
                 is Result.Success -> {
                     val movie = result.data
-
-                    // Save movie to local database if not already saved
                     val localMovie = movieRepository.getMovieByTmdbId(tmdbId)
+
                     if (localMovie == null) {
                         when (val saveResult = movieRepository.saveMovie(movie)) {
                             is Result.Success -> currentMovieId = saveResult.data
@@ -58,19 +67,21 @@ class DetailsViewModel(
                         currentMovieId = localMovie.id
                     }
 
-                    // Check if movie is in watchlist
                     val isInWatchlist = watchlistRepository.isInWatchlist(tmdbId, "movie")
 
-                    // Load existing rating if any
                     val existingRating = if (currentMovieId > 0) {
                         ratingRepository.getRatingsByMovieId(currentMovieId).first().firstOrNull()
                     } else null
 
                     existingRatingId = existingRating?.id
 
+                    val ratingUi = existingRating?.let {
+                        RatingPresentationMapper.toPresentation(it)
+                    }
+
                     _uiState.value = DetailsUiState.Success(
                         movie = movie,
-                        userRating = existingRating?.rating,
+                        userRating = ratingUi,
                         isInWatchlist = isInWatchlist
                     )
                 }
@@ -84,77 +95,133 @@ class DetailsViewModel(
         }
     }
 
-    fun updateRating(rating: Double) {
+    /**
+     * Updates or adds a movie rating using enterprise use cases.
+     *
+     * Uses AddRatingUseCase for new ratings and UpdateRatingUseCase for existing ones.
+     * Handles validation errors with user-friendly messages.
+     */
+    fun updateRating(rating: Double, review: String? = null) {
         val currentState = _uiState.value
         if (currentState is DetailsUiState.Success && currentMovieId > 0) {
             viewModelScope.launch {
-                // Save rating to database
-                val ratingToSave = Rating(
-                    id = existingRatingId ?: 0,
-                    movieId = currentMovieId,
-                    rating = rating,
-                    review = null,
-                    watchedDate = TimeProvider.now(),
-                    createdAt = TimeProvider.now(),
-                    updatedAt = TimeProvider.now()
-                )
-
-                if (existingRatingId != null) {
-                    // Update existing rating
-                    ratingRepository.updateRating(ratingToSave)
+                val result = if (existingRatingId != null) {
+                    updateRatingUseCase(
+                        UpdateRatingUseCase.Params(
+                            ratingId = existingRatingId!!,
+                            movieId = currentMovieId,
+                            rating = rating,
+                            review = review
+                        )
+                    )
                 } else {
-                    // Add new rating
-                    when (val result = ratingRepository.addRating(ratingToSave)) {
-                        is Result.Success -> existingRatingId = result.data
-                        else -> {}
-                    }
+                    addRatingUseCase(
+                        AddRatingUseCase.Params(
+                            movieId = currentMovieId,
+                            rating = rating,
+                            review = review
+                        )
+                    )
                 }
 
-                // Update UI state
-                _uiState.update {
-                    DetailsUiState.Success(
-                        movie = currentState.movie,
-                        userRating = rating,
-                        isInWatchlist = currentState.isInWatchlist
-                    )
+                when (result) {
+                    is Result.Success -> {
+                        if (existingRatingId == null && result.data is Long) {
+                            existingRatingId = result.data
+                        }
+
+                        val freshRating = ratingRepository.getRatingsByMovieId(currentMovieId)
+                            .first()
+                            .firstOrNull()
+
+                        val ratingUi = freshRating?.let {
+                            RatingPresentationMapper.toPresentation(it)
+                        }
+
+                        _uiState.update {
+                            DetailsUiState.Success(
+                                movie = currentState.movie,
+                                userRating = ratingUi,
+                                isInWatchlist = currentState.isInWatchlist
+                            )
+                        }
+                    }
+                    is Result.Error -> {
+                        val errorMessage = when (result.error) {
+                            is NetworkError.Validation.RatingTooLow ->
+                                "Rating must be at least 0.0"
+                            is NetworkError.Validation.RatingTooHigh ->
+                                "Rating cannot exceed 5.0"
+                            is NetworkError.Validation.RatingInvalidIncrement ->
+                                "Rating must be in 0.5 increments (e.g., 3.5, 4.0)"
+                            is NetworkError.Validation.ReviewTooLong ->
+                                "Review is too long (max 1000 characters)"
+                            is NetworkError.Validation.ReviewInvalidContent ->
+                                "Review contains inappropriate content"
+                            else -> "Failed to save rating: ${result.error.message}"
+                        }
+                        _uiState.value = DetailsUiState.Error(errorMessage)
+                    }
+                    is Result.Loading -> {
+                    }
                 }
             }
         }
     }
 
+    /**
+     * Toggles movie watchlist status using enterprise use cases.
+     *
+     * Uses AddToWatchlistUseCase and RemoveFromWatchlistUseCase with validation.
+     * Handles validation errors like duplicate entries gracefully.
+     */
     fun toggleWatchlist() {
         val currentState = _uiState.value
         if (currentState is DetailsUiState.Success) {
             viewModelScope.launch {
                 val movie = currentState.movie
 
-                if (currentState.isInWatchlist) {
-                    // Remove from watchlist
-                    watchlistRepository.removeFromWatchlist(movie.tmdbId, "movie")
-                    _uiState.update {
-                        DetailsUiState.Success(
-                            movie = currentState.movie,
-                            userRating = currentState.userRating,
-                            isInWatchlist = false
+                val result = if (currentState.isInWatchlist) {
+                    removeFromWatchlistUseCase(
+                        RemoveFromWatchlistUseCase.Params(
+                            tmdbId = movie.tmdbId,
+                            contentType = "movie"
                         )
-                    }
-                } else {
-                    // Add to watchlist
-                    val watchlistItem = WatchlistItem(
-                        id = 0, // Auto-generated by database
-                        tmdbId = movie.tmdbId,
-                        contentType = "movie",
-                        title = movie.title,
-                        posterPath = movie.posterPath,
-                        dateAdded = TimeProvider.now()
                     )
-                    watchlistRepository.addToWatchlist(watchlistItem)
-                    _uiState.update {
-                        DetailsUiState.Success(
-                            movie = currentState.movie,
-                            userRating = currentState.userRating,
-                            isInWatchlist = true
+                } else {
+                    addToWatchlistUseCase(
+                        AddToWatchlistUseCase.Params(
+                            tmdbId = movie.tmdbId,
+                            title = movie.title,
+                            posterPath = movie.posterPath,
+                            contentType = "movie"
                         )
+                    )
+                }
+
+                when (result) {
+                    is Result.Success -> {
+                        _uiState.update {
+                            DetailsUiState.Success(
+                                movie = currentState.movie,
+                                userRating = currentState.userRating,
+                                isInWatchlist = !currentState.isInWatchlist
+                            )
+                        }
+                    }
+                    is Result.Error -> {
+                        val errorMessage = when (result.error) {
+                            is NetworkError.Validation.DuplicateWatchlistEntry ->
+                                "This movie is already in your watchlist"
+                            is NetworkError.Validation.InvalidContentType ->
+                                "Invalid content type"
+                            is NetworkError.Validation.FieldRequired ->
+                                "Movie title is required"
+                            else -> "Failed to update watchlist: ${result.error.message}"
+                        }
+                        _uiState.value = DetailsUiState.Error(errorMessage)
+                    }
+                    is Result.Loading -> {
                     }
                 }
             }
