@@ -6,7 +6,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
@@ -28,15 +27,11 @@ import androidx.compose.ui.unit.sp
 import com.cinescope.cinescope.presentation.components.CineScopeCard
 import com.cinescope.cinescope.presentation.components.GradientCard
 import com.cinescope.cinescope.presentation.components.LoadingIndicator
-import com.cinescope.cinescope.presentation.components.StatsItem
 import com.cinescope.cinescope.presentation.theme.Gradients
 import com.cinescope.cinescope.presentation.theme.Spacing
 import com.cinescope.cinescope.presentation.theme.CineScopeTheme
 import org.koin.compose.viewmodel.koinViewModel
 
-/**
- * Apple-inspired Statistics Screen with vibrant gradient cards.
- */
 @Composable
 fun StatisticsScreen(
     viewModel: StatisticsViewModel = koinViewModel()
@@ -52,17 +47,16 @@ fun StatisticsScreen(
         ) {
             LoadingIndicator(message = "Loading statistics...")
         }
-    } else {
+    } else if (uiState.statistics != null) {
+        val stats = uiState.statistics!!
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(CineScopeTheme.colors.cardBackground)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Top spacing
             Spacer(modifier = Modifier.height(Spacing.xl))
 
-            // Large title
             Text(
                 text = "Statistics",
                 fontSize = 34.sp,
@@ -72,7 +66,6 @@ fun StatisticsScreen(
             )
 
             Spacer(modifier = Modifier.height(Spacing.lg))
-            // Overview Stats with gradient cards
             Column(
                 modifier = Modifier.padding(horizontal = Spacing.md),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -97,7 +90,7 @@ fun StatisticsScreen(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = uiState.totalMovies.toString(),
+                                text = stats.totalMovies.toString(),
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -126,7 +119,7 @@ fun StatisticsScreen(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = uiState.totalTVSeries.toString(),
+                                text = stats.totalTVSeries.toString(),
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -160,7 +153,7 @@ fun StatisticsScreen(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "${(uiState.averageRating * 10).toInt() / 10.0}",
+                                text = stats.averageRating.toString(),
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -189,7 +182,7 @@ fun StatisticsScreen(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = uiState.watchlistCount.toString(),
+                                text = stats.watchlistCount.toString(),
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -206,8 +199,7 @@ fun StatisticsScreen(
 
             Spacer(modifier = Modifier.height(Spacing.xl))
 
-            // Rating Distribution
-            if (uiState.ratingDistribution.isNotEmpty()) {
+            if (stats.ratingDistribution.isNotEmpty()) {
                 Text(
                     text = "Rating Distribution",
                     fontSize = 20.sp,
@@ -229,15 +221,11 @@ fun StatisticsScreen(
                             .padding(20.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        (5 downTo 1).forEach { rating ->
-                            val count = uiState.ratingDistribution[rating] ?: 0
-                            val maxCount = uiState.ratingDistribution.values.maxOrNull() ?: 1
-                            val percentage = if (maxCount > 0) count.toFloat() / maxCount else 0f
-
+                        stats.ratingDistribution.reversed().forEach { bar ->
                             RatingBar(
-                                rating = rating,
-                                count = count,
-                                percentage = percentage
+                                rating = bar.rating,
+                                count = bar.count,
+                                percentage = bar.barWidthFraction
                             )
                         }
                     }
@@ -246,8 +234,7 @@ fun StatisticsScreen(
                 Spacer(modifier = Modifier.height(Spacing.xl))
             }
 
-            // Top Genres
-            if (uiState.topGenres.isNotEmpty()) {
+            if (stats.topGenres.isNotEmpty()) {
                 Text(
                     text = "Top Genres",
                     fontSize = 20.sp,
@@ -269,14 +256,14 @@ fun StatisticsScreen(
                             .padding(20.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        uiState.topGenres.forEach { (genre, count) ->
+                        stats.topGenres.forEach { genreStat ->
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = genre,
+                                    text = genreStat.name,
                                     fontSize = 17.sp,
                                     fontWeight = FontWeight.Normal,
                                     color = CineScopeTheme.colors.textPrimary
@@ -288,7 +275,7 @@ fun StatisticsScreen(
                                         .padding(horizontal = 12.dp, vertical = 4.dp)
                                 ) {
                                     Text(
-                                        text = count.toString(),
+                                        text = genreStat.count.toString(),
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = Color.White
@@ -302,7 +289,6 @@ fun StatisticsScreen(
                 Spacer(modifier = Modifier.height(Spacing.xl))
             }
 
-            // Insights with gradient card
             GradientCard(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -322,33 +308,32 @@ fun StatisticsScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     InsightItem(
-                        text = "You've watched ${uiState.totalMovies + uiState.totalTVSeries} titles total!"
+                        text = "You've watched ${stats.totalContent} titles total!"
                     )
 
-                    if (uiState.averageRating >= 4.0) {
+                    if (stats.averageRating >= 4.0) {
                         Spacer(modifier = Modifier.height(8.dp))
                         InsightItem(
-                            text = "You're a tough critic with an average rating of ${(uiState.averageRating * 10).toInt() / 10.0}⭐"
+                            text = "You're a tough critic with an average rating of ${stats.averageRating}⭐"
                         )
                     }
 
-                    if (uiState.totalRatings >= 10) {
+                    if (stats.totalRatings >= 10) {
                         Spacer(modifier = Modifier.height(8.dp))
                         InsightItem(
-                            text = "You've rated ${uiState.totalRatings} titles - great for personalized recommendations!"
+                            text = "You've rated ${stats.totalRatings} titles - great for personalized recommendations!"
                         )
                     }
 
-                    if (uiState.watchlistCount > 0) {
+                    if (stats.watchlistCount > 0) {
                         Spacer(modifier = Modifier.height(8.dp))
                         InsightItem(
-                            text = "You have ${uiState.watchlistCount} titles in your watchlist"
+                            text = "You have ${stats.watchlistCount} titles in your watchlist"
                         )
                     }
                 }
             }
 
-            // Bottom padding for floating tab bar
             Spacer(modifier = Modifier.height(100.dp))
         }
     }
