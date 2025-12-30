@@ -1,6 +1,5 @@
 package com.cinescope.cinescope.presentation.screens.search
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -37,19 +36,14 @@ fun SearchScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // Handle system back button
-    BackHandler(onBack = navigateBack)
-
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(CineScopeTheme.colors.cardBackground)
             .statusBarsPadding()
     ) {
-        // Top spacing
         Spacer(modifier = Modifier.height(Spacing.sm))
 
-        // Header with back button and title
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -79,7 +73,6 @@ fun SearchScreen(
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            // Search bar with padding
             CineScopeSearchBar(
                 query = uiState.searchQuery,
                 onQueryChange = viewModel::onSearchQueryChanged,
@@ -90,7 +83,6 @@ fun SearchScreen(
 
             Spacer(modifier = Modifier.height(Spacing.lg))
 
-            // Content
             when {
                 uiState.isLoading -> {
                     Box(
@@ -190,7 +182,7 @@ fun SearchScreen(
                         contentPadding = PaddingValues(
                             start = Spacing.md,
                             end = Spacing.md,
-                            bottom = 100.dp // Space for floating tab bar
+                            bottom = 100.dp
                         ),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
