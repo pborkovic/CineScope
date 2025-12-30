@@ -23,7 +23,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.cinescope.cinescope.domain.model.WatchlistItem
+import com.cinescope.cinescope.presentation.model.WatchlistItemUi
 import com.cinescope.cinescope.presentation.components.EmptyState
 import com.cinescope.cinescope.presentation.components.GlassCard
 import com.cinescope.cinescope.presentation.components.LoadingIndicator
@@ -81,7 +81,7 @@ fun WatchlistScreen(
 
 @Composable
 private fun WatchlistItemCard(
-    item: WatchlistItem,
+    item: WatchlistItemUi,
     onClick: () -> Unit,
     onRemove: () -> Unit
 ) {
@@ -95,9 +95,8 @@ private fun WatchlistItemCard(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Poster
             AsyncImage(
-                model = item.posterPath?.let { "https://image.tmdb.org/t/p/w185$it" },
+                model = item.posterUrl,
                 contentDescription = null,
                 modifier = Modifier
                     .width(60.dp)
@@ -105,7 +104,6 @@ private fun WatchlistItemCard(
                 contentScale = ContentScale.Crop
             )
 
-            // Title and info
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -126,7 +124,7 @@ private fun WatchlistItemCard(
                     shape = MaterialTheme.shapes.small
                 ) {
                     Text(
-                        text = if (item.contentType == "movie") "Movie" else "TV Series",
+                        text = item.contentTypeDisplay,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSecondary,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
@@ -134,7 +132,6 @@ private fun WatchlistItemCard(
                 }
             }
 
-            // Delete button
             IconButton(onClick = onRemove) {
                 Icon(
                     imageVector = Icons.Default.Delete,
