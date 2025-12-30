@@ -2,9 +2,12 @@ package com.cinescope.cinescope.presentation.screens.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cinescope.cinescope.domain.model.Movie
 import com.cinescope.cinescope.domain.repository.MovieRepository
+import com.cinescope.cinescope.domain.usecase.movie.SearchMoviesUseCase
+import com.cinescope.cinescope.domain.util.NetworkError
 import com.cinescope.cinescope.domain.util.Result
+import com.cinescope.cinescope.presentation.mapper.MoviePresentationMapper
+import com.cinescope.cinescope.presentation.model.MovieUi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -12,12 +15,13 @@ import kotlinx.coroutines.launch
 data class SearchUiState(
     val searchQuery: String = "",
     val isLoading: Boolean = false,
-    val searchResults: List<Movie> = emptyList(),
+    val searchResults: List<MovieUi> = emptyList(),
     val errorMessage: String? = null
 )
 
 @OptIn(FlowPreview::class)
 class SearchViewModel(
+    private val searchMoviesUseCase: SearchMoviesUseCase,
     private val movieRepository: MovieRepository
 ) : ViewModel() {
 
@@ -51,21 +55,40 @@ class SearchViewModel(
     private suspend fun performSearch(query: String) {
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-        when (val result = movieRepository.searchMovies(query)) {
+        when (val result = searchMoviesUseCase(SearchMoviesUseCase.Params(query))) {
             is Result.Success -> {
+                val moviesUi = MoviePresentationMapper.toPresentation(result.data)
+
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        searchResults = result.data,
+                        searchResults = moviesUi,
                         errorMessage = null
                     )
                 }
             }
             is Result.Error -> {
+                val errorMessage = when (result.error) {
+                    is NetworkError.Validation.SearchQueryTooShort ->
+                        "Please enter at least 2 characters to search"
+                    is NetworkError.Validation.SearchQueryEmpty ->
+                        "Search query cannot be empty"
+                    is NetworkError.Validation.SearchQueryTooLong ->
+                        "Search query is too long (max 100 characters)"
+                    is NetworkError.Validation.SearchQueryInvalidCharacters ->
+                        "Search contains invalid characters. Use only letters, numbers, and basic punctuation."
+                    is NetworkError.NoInternet ->
+                        "No internet connection. Please check your network."
+                    is NetworkError.Timeout ->
+                        "Search timed out. Please try again."
+                    else ->
+                        "Search failed: ${result.error.message}"
+                }
+
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = "Failed to search: ${result.error}"
+                        errorMessage = errorMessage
                     )
                 }
             }
@@ -75,9 +98,12 @@ class SearchViewModel(
         }
     }
 
-    fun addToLibrary(movie: Movie) {
+    fun addToLibrary(movieUi: MovieUi) {
         viewModelScope.launch {
-            movieRepository.saveMovie(movie)
+            val domainMovie = movieRepository.getMovieByTmdbId(movieUi.tmdbId)
+            if (domainMovie != null) {
+                movieRepository.saveMovie(domainMovie)
+            }
         }
     }
 }
