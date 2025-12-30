@@ -24,6 +24,14 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
+
+            binaryOption("bundleId", "com.cinescope.cinescope.ComposeApp")
+
+            linkerOpts.add("-lsqlite3")
+            export(libs.sqldelight.runtime)
+            export(libs.sqldelight.native.driver)
+
+            export(compose.components.resources)
         }
     }
 
@@ -45,7 +53,7 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.materialIconsExtended)
             implementation(compose.ui)
-            implementation(compose.components.resources)
+            api(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
@@ -68,8 +76,11 @@ kotlin {
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
 
-            // Navigation
-            implementation(libs.navigation.compose)
+            // Navigation - Voyager
+            implementation(libs.voyager.navigator)
+            implementation(libs.voyager.tab.navigator)
+            implementation(libs.voyager.transitions)
+            implementation(libs.voyager.koin)
 
             // Image Loading
             implementation(libs.coil.compose)
@@ -88,7 +99,7 @@ kotlin {
             implementation(libs.ktor.client.darwin)
 
             // SQLDelight iOS Driver
-            implementation(libs.sqldelight.native.driver)
+            api(libs.sqldelight.native.driver)
         }
     }
 }
