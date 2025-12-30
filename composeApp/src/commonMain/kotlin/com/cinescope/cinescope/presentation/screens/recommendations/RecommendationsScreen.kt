@@ -25,7 +25,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import com.cinescope.cinescope.domain.model.Recommendation
+import com.cinescope.cinescope.presentation.model.RecommendationUi
 import com.cinescope.cinescope.presentation.components.*
 import com.cinescope.cinescope.presentation.theme.Gradients
 import com.cinescope.cinescope.presentation.theme.Spacing
@@ -44,10 +44,8 @@ fun RecommendationsScreen(
             .fillMaxSize()
             .background(CineScopeTheme.colors.cardBackground)
     ) {
-        // Top spacing
         Spacer(modifier = Modifier.height(Spacing.xl))
 
-        // Header with title and refresh button
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -74,7 +72,6 @@ fun RecommendationsScreen(
 
         Spacer(modifier = Modifier.height(Spacing.lg))
 
-        // Content
         when {
             uiState.isLoading -> {
                 Box(
@@ -148,7 +145,7 @@ fun RecommendationsScreen(
                     contentPadding = PaddingValues(
                         start = Spacing.md,
                         end = Spacing.md,
-                        bottom = 100.dp // Space for floating tab bar
+                        bottom = 100.dp
                     ),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -166,11 +163,10 @@ fun RecommendationsScreen(
 
 @Composable
 private fun RecommendationCard(
-    recommendation: Recommendation,
+    recommendation: RecommendationUi,
     onClick: () -> Unit
 ) {
     val movie = recommendation.movie
-    val matchPercentage = (recommendation.matchScore * 100).toInt()
 
     CineScopeCard(
         onClick = onClick,
@@ -181,9 +177,8 @@ private fun RecommendationCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Poster
             AsyncImage(
-                model = movie.getPosterUrl("w185"),
+                model = movie.posterUrl,
                 contentDescription = null,
                 modifier = Modifier
                     .width(90.dp)
@@ -192,7 +187,6 @@ private fun RecommendationCard(
                 contentScale = ContentScale.Crop
             )
 
-            // Movie info
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -209,21 +203,20 @@ private fun RecommendationCard(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Match percentage badge
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
                         .background(
-                            when {
-                                matchPercentage >= 90 -> Gradients.Sunset
-                                matchPercentage >= 75 -> Gradients.Ocean
-                                else -> Gradients.Lavender
+                            when (recommendation.matchQuality) {
+                                com.cinescope.cinescope.presentation.model.MatchQuality.HIGH -> Gradients.Sunset
+                                com.cinescope.cinescope.presentation.model.MatchQuality.MEDIUM -> Gradients.Ocean
+                                com.cinescope.cinescope.presentation.model.MatchQuality.LOW -> Gradients.Lavender
                             }
                         )
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
                     Text(
-                        text = "$matchPercentage% Match",
+                        text = recommendation.matchDisplay,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color.White
@@ -243,12 +236,11 @@ private fun RecommendationCard(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // TMDB Rating and year
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    movie.voteAverage?.let { rating ->
+                    if (movie.ratingDisplay.isNotBlank()) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = Icons.Default.Star,
@@ -257,7 +249,7 @@ private fun RecommendationCard(
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
-                                text = "${(rating * 10).toInt() / 10.0}",
+                                text = movie.ratingDisplay.substringBefore("/10"),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium,
                                 modifier = Modifier.padding(start = 4.dp),
@@ -266,14 +258,14 @@ private fun RecommendationCard(
                         }
                     }
 
-                    movie.releaseDate?.let { date ->
+                    if (movie.releaseYear.isNotBlank()) {
                         Text(
                             text = "•",
                             fontSize = 14.sp,
                             color = CineScopeTheme.colors.textSecondary
                         )
                         Text(
-                            text = date.take(4),
+                            text = movie.releaseYear,
                             fontSize = 14.sp,
                             color = CineScopeTheme.colors.textSecondary
                         )
