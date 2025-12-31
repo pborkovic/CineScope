@@ -1,20 +1,32 @@
 package com.cinescope.cinescope
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.window.ComposeUIViewController
 import com.cinescope.cinescope.di.appModule
 import org.koin.core.context.startKoin
+import platform.UIKit.UIViewController
 
-fun MainViewController() = ComposeUIViewController {
-    initKoin()
+private var koinStarted = false
+
+@Composable
+private fun SafeApp() {
     App()
 }
 
 private fun initKoin() {
-    try {
-        startKoin {
-            modules(appModule)
+    if (!koinStarted) {
+        try {
+            startKoin {
+                modules(appModule)
+            }
+
+            koinStarted = true
+        } catch (e: Exception) {
+            println("=== Koin error: ${e.message} ===")
+            e.printStackTrace()
         }
-    } catch (e: Exception) {
-        // Koin already started, ignore
+    } else {
+        println("=== Koin already initialized ===")
     }
 }
