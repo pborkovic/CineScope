@@ -21,7 +21,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import com.cinescope.cinescope.domain.model.Movie
 import com.cinescope.cinescope.presentation.model.MovieUi
 import com.cinescope.cinescope.presentation.theme.Gradients
 import com.cinescope.cinescope.presentation.theme.Shadows.subtle
@@ -123,116 +122,6 @@ fun MovieCard(
                 }
             }
 
-            Column(
-                modifier = Modifier.padding(12.dp)
-            ) {
-                Text(
-                    text = movie.title,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    color = CineScopeTheme.colors.textPrimary
-                )
-            }
-        }
-    }
-}
-
-/**
- * Legacy MovieCard that accepts domain Movie model.
- * Kept for backward compatibility with screens not yet migrated to MovieUi.
- * @deprecated Use MovieCard(movieUi: MovieUi) instead
- */
-@Deprecated("Use MovieCard with MovieUi instead", ReplaceWith("MovieCard(movieUi, onClick, modifier)"))
-@Composable
-fun MovieCard(
-    movie: Movie,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    // Assign gradient based on movie ID for consistency
-    val gradient = Gradients.getGradient(movie.tmdbId % 6)
-
-    CineScopeCard(
-        modifier = modifier.width(150.dp),
-        onClick = onClick,
-        shape = RoundedCornerShape(20.dp),
-        elevation = 4.dp
-    ) {
-        Column {
-            // Poster with gradient background
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(225.dp)
-            ) {
-                // Gradient background layer
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(gradient)
-                )
-
-                // Poster image
-                AsyncImage(
-                    model = movie.getPosterUrl(),
-                    contentDescription = movie.title,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-
-                // Dark gradient overlay for depth
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    Color.Black.copy(alpha = 0.3f)
-                                )
-                            )
-                        )
-                )
-
-                // Rating badge (bottom-right corner)
-                movie.voteAverage?.let { rating ->
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(8.dp)
-                            .size(36.dp)
-                            .subtle(CircleShape)
-                            .clip(CircleShape)
-                            .background(Color.White)
-                            .padding(6.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = null,
-                                tint = CineScopeTheme.glassColors.rating,
-                                modifier = Modifier.size(12.dp)
-                            )
-                            Spacer(modifier = Modifier.width(2.dp))
-                            Text(
-                                text = "${(rating * 10).toInt() / 10.0}",
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = CineScopeTheme.colors.textPrimary
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Movie title
             Column(
                 modifier = Modifier.padding(12.dp)
             ) {
