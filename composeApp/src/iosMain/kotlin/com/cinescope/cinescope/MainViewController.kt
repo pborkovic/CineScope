@@ -30,3 +30,11 @@ private fun initKoin() {
         println("=== Koin already initialized ===")
     }
 }
+
+fun MainViewController(): UIViewController {
+    initKoin()
+
+    return ComposeUIViewController {
+        SafeApp()
+    }
+}

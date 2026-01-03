@@ -1,80 +1,161 @@
-This is a Kotlin Multiplatform project targeting Android, iOS, Web, Desktop (JVM).
+# CineScope
+
+A Kotlin Multiplatform movie tracking and recommendation app for Android and iOS, powered by The Movie Database (TMDB) API.
+
+## Features
+
+- Browse and search movies from TMDB
+- Rate movies with a 0-5 star system
+- Manage your watchlist
+- Get personalized movie recommendations
+- View your movie statistics
+- Light and dark mode support
+
+## Project Structure
+
+This is a Kotlin Multiplatform project targeting Android and iOS.
 
 * [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
   It contains several subfolders:
-    - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
+    - [commonMain](./composeApp/src/commonMain/kotlin) is for code that's common for all targets.
     - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-      For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
+      For example, if you want to use Apple's CoreCrypto for the iOS part of your Kotlin app,
       the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-      Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-      folder is the appropriate location.
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
+* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you're sharing your UI with Compose Multiplatform,
   you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
 
-### Build and Run Android Application
+## Setup Instructions
 
-To build and run the development version of the Android app, use the run configuration from the run widget
-in your IDE’s toolbar or build it directly from the terminal:
+### Prerequisites
 
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:assembleDebug
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:assembleDebug
-  ```
+- JDK 11 or higher
+- TMDB API Key (free)
 
-### Build and Run Desktop (JVM) Application
+### 1. Get Your TMDB API Key
 
-To build and run the development version of the desktop app, use the run configuration from the run widget
-in your IDE’s toolbar or run it directly from the terminal:
+1. Create a free account at [The Movie Database](https://www.themoviedb.org/)
+2. Go to [API Settings](https://www.themoviedb.org/settings/api)
+3. Request an API key (choose "Developer" option)
+4. Copy your API key
 
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:run
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:run
-  ```
+### 2. Configure API Key
 
-### Build and Run Web Application
+**Option A: Using local.properties (Recommended for local development)**
 
-To build and run the development version of the web app, use the run configuration from the run widget
-in your IDE's toolbar or run it directly from the terminal:
+Add the following line to `local.properties` in the project root:
 
-- for the Wasm target (faster, modern browsers):
-    - on macOS/Linux
-      ```shell
-      ./gradlew :composeApp:wasmJsBrowserDevelopmentRun
-      ```
-    - on Windows
-      ```shell
-      .\gradlew.bat :composeApp:wasmJsBrowserDevelopmentRun
-      ```
-- for the JS target (slower, supports older browsers):
-    - on macOS/Linux
-      ```shell
-      ./gradlew :composeApp:jsBrowserDevelopmentRun
-      ```
-    - on Windows
-      ```shell
-      .\gradlew.bat :composeApp:jsBrowserDevelopmentRun
-      ```
+```properties
+tmdb.api.key=your_actual_api_key_here
+```
 
-### Build and Run iOS Application
+**Option B: Using Environment Variable (Recommended for CI/CD)**
 
-To build and run the development version of the iOS app, use the run configuration from the run widget
-in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+```bash
+export TMDB_API_KEY=your_actual_api_key_here
+```
+
+### 3. Generate BuildConfig
+
+The project uses a Gradle task to generate `BuildConfig.kt` from your API key:
+
+```bash
+./gradlew generateBuildConfig
+```
+
+This task runs automatically before compilation, so you can also just build the project:
+
+```bash
+# Android
+./gradlew :composeApp:assembleDebug
+
+# iOS
+./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64
+```
+
+## Building and Running
+
+### Android
+
+**Using Android Studio:**
+1. Open the project in Android Studio
+2. Select the Android run configuration
+3. Run the app on an emulator or physical device
+
+**Using Terminal:**
+```bash
+# Build debug APK
+./gradlew :composeApp:assembleDebug
+
+# Install on connected device
+./gradlew :composeApp:installDebug
+```
+
+### iOS
+
+**Using Xcode:**
+1. Open the `/iosApp/iosApp.xcodeproj` in Xcode
+2. Select a simulator or physical device
+3. Build and run
+
+**Using Terminal:**
+```bash
+# Build iOS framework
+./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64
+
+# For physical device (M1+ Mac)
+./gradlew :composeApp:linkDebugFrameworkIosArm64
+```
+
+## Tech Stack
+
+- **Kotlin Multiplatform**: Shared business logic
+- **Compose Multiplatform**: Shared UI across platforms
+- **Ktor**: Networking (TMDB API integration)
+- **SQLDelight**: Local database for offline support
+- **Koin**: Dependency injection
+- **Voyager**: Navigation
+- **Coil**: Image loading
+- **Material3**: Design system
+
+## Architecture
+
+The app follows **Clean Architecture** principles with three layers:
+
+```
+Presentation (UI + ViewModels)
+    ↓
+Domain (Use Cases + Business Logic)
+    ↓
+Data (Repositories + Local DB + Remote API)
+```
+
+### Key Features:
+- MVVM pattern with unidirectional data flow
+- Repository pattern for data abstraction
+- Use case pattern for business logic encapsulation
+- Offline-first with local caching
+- Reactive state management with Kotlin Flow
+
+## Security
+
+⚠️ **Important**: Never commit `BuildConfig.kt` or `local.properties` with real API keys to version control!
+
+- `BuildConfig.kt` is auto-generated and gitignored
+- `local.properties` is gitignored by default
+- Use environment variables for CI/CD pipelines
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is for educational purposes. Movie data is provided by [The Movie Database (TMDB)](https://www.themoviedb.org/).
 
 ---
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html),
-[Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform/#compose-multiplatform),
-[Kotlin/Wasm](https://kotl.in/wasm/)…
-
-We would appreciate your feedback on Compose/Web and Kotlin/Wasm in the public Slack
-channel [#compose-web](https://slack-chats.kotlinlang.org/c/compose-web).
-If you face any issues, please report them on [YouTrack](https://youtrack.jetbrains.com/newIssue?project=CMP).
+Learn more about:
+- [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)
+- [Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform/)
+- [TMDB API](https://developers.themoviedb.org/3)
