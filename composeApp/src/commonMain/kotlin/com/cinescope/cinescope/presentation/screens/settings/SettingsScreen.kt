@@ -13,7 +13,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.*
@@ -25,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.cinescope.cinescope.domain.model.ThemePreference
 import com.cinescope.cinescope.presentation.components.CineScopeCard
 import com.cinescope.cinescope.presentation.theme.Spacing
 import com.cinescope.cinescope.presentation.theme.CineScopeTheme
@@ -39,7 +43,6 @@ fun SettingsScreen(
     val uiState by viewModel.uiState.collectAsState()
     var nameInput by remember { mutableStateOf("") }
 
-    // Initialize name input when profile loads
     LaunchedEffect(uiState.userProfile.name) {
         nameInput = uiState.userProfile.name ?: ""
     }
@@ -51,10 +54,8 @@ fun SettingsScreen(
             .statusBarsPadding()
             .verticalScroll(rememberScrollState())
     ) {
-        // Top spacing
         Spacer(modifier = Modifier.height(Spacing.md))
 
-        // Header
         Text(
             text = "Settings",
             fontSize = 34.sp,
@@ -65,7 +66,6 @@ fun SettingsScreen(
 
         Spacer(modifier = Modifier.height(Spacing.xl))
 
-        // Profile Picture Section
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -76,7 +76,6 @@ fun SettingsScreen(
                 modifier = Modifier.size(120.dp),
                 contentAlignment = Alignment.Center
             ) {
-                // Profile picture or placeholder
                 if (uiState.userProfile.profilePicturePath != null) {
                     AsyncImage(
                         model = uiState.userProfile.profilePicturePath,
@@ -90,7 +89,6 @@ fun SettingsScreen(
                             }
                     )
                 } else {
-                    // Placeholder
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -111,7 +109,6 @@ fun SettingsScreen(
                     }
                 }
 
-                // Camera icon overlay
                 Box(
                     modifier = Modifier
                         .size(36.dp)
@@ -143,7 +140,6 @@ fun SettingsScreen(
 
         Spacer(modifier = Modifier.height(Spacing.xl))
 
-        // Profile Information Section
         Text(
             text = "Profile Information",
             fontSize = 20.sp,
@@ -154,7 +150,6 @@ fun SettingsScreen(
 
         Spacer(modifier = Modifier.height(Spacing.md))
 
-        // Name Input Card
         CineScopeCard(
             modifier = Modifier
                 .fillMaxWidth()
@@ -206,7 +201,46 @@ fun SettingsScreen(
 
         Spacer(modifier = Modifier.height(Spacing.xl))
 
-        // App Information Section
+        Text(
+            text = "Appearance",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = CineScopeTheme.colors.textPrimary,
+            modifier = Modifier.padding(horizontal = Spacing.md)
+        )
+
+        Spacer(modifier = Modifier.height(Spacing.md))
+
+        CineScopeCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.md)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp)
+            ) {
+                Text(
+                    text = "Theme",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = CineScopeTheme.colors.textSecondary
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                ThemeDropdown(
+                    selectedTheme = uiState.userProfile.themePreference,
+                    onThemeSelected = { theme ->
+                        viewModel.updateThemePreference(theme)
+                    }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(Spacing.xl))
+
         Text(
             text = "About",
             fontSize = 20.sp,
@@ -235,7 +269,6 @@ fun SettingsScreen(
             }
         }
 
-        // Bottom padding for floating tab bar
         Spacer(modifier = Modifier.height(100.dp))
     }
 }
@@ -263,5 +296,84 @@ private fun SettingRow(
             fontWeight = FontWeight.Normal,
             color = CineScopeTheme.colors.textSecondary
         )
+    }
+}
+
+@Composable
+private fun ThemeDropdown(
+    selectedTheme: ThemePreference,
+    onThemeSelected: (ThemePreference) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val themes = listOf(
+        ThemePreference.SYSTEM,
+        ThemePreference.LIGHT,
+        ThemePreference.DARK
+    )
+
+    Box {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = true }
+                .background(
+                    color = Color.Transparent,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .border(
+                    width = 1.dp,
+                    color = CineScopeTheme.colors.textSecondary.copy(alpha = 0.2f),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = selectedTheme.toDisplayName(),
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Normal,
+                color = CineScopeTheme.colors.textPrimary
+            )
+
+            Icon(
+                imageVector = Icons.Default.ArrowDropDown,
+                contentDescription = "Select theme",
+                tint = CineScopeTheme.colors.textSecondary,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier
+                .background(CineScopeTheme.colors.cardBackground)
+                .border(
+                    width = 1.dp,
+                    color = CineScopeTheme.colors.textSecondary.copy(alpha = 0.2f),
+                    shape = RoundedCornerShape(12.dp)
+                )
+        ) {
+            themes.forEach { theme ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = theme.toDisplayName(),
+                            fontSize = 17.sp,
+                            fontWeight = if (theme == selectedTheme) FontWeight.SemiBold else FontWeight.Normal,
+                            color = if (theme == selectedTheme)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                CineScopeTheme.colors.textPrimary
+                        )
+                    },
+                    onClick = {
+                        onThemeSelected(theme)
+                        expanded = false
+                    }
+                )
+            }
+        }
     }
 }
