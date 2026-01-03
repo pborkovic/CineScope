@@ -59,25 +59,18 @@ I focused on creating a clean architecture that's maintainable, testable, and sc
 
 ## Screenshots
 
-> Add screenshots here showing:
-> - Home screen with trending movies
-> - Movie details screen
-> - Watchlist screen
-> - Profile/Settings screen
-> - Light and Dark mode comparisons
-
-<!--
 <p align="center">
-  <img src="screenshots/home.png" alt="Home Screen" width="25%"/>
-  <img src="screenshots/details.png" alt="Details Screen" width="25%"/>
-  <img src="screenshots/watchlist.png" alt="Watchlist" width="25%"/>
+  <img src="images/Home_Screen.png" alt="Home Screen" width="30%"/>
+  <img src="images/Search_Screen.png" alt="Search Screen" width="30%"/>
+  <img src="images/Recommendation_Screen.png" alt="Recommendations" width="30%"/>
 </p>
 
 <p align="center">
-  <img src="screenshots/profile.png" alt="Profile" width="25%"/>
-  <img src="screenshots/dark_mode.png" alt="Dark Mode" width="25%"/>
+  <img src="images/Watchlist_Screen.png" alt="Watchlist" width="30%"/>
+  <img src="images/Settings_Screen.png" alt="Settings Screen" width="30%"/>
 </p>
--->
+
+> **Note:** The application fully supports Dark Mode, Light Mode, and System theme preferences. Users can switch between themes in the Settings screen.
 
 ## Technical Implementation
 
