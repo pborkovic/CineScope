@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.cinescope.cinescope.domain.model.ThemePreference
 import com.cinescope.cinescope.presentation.components.CineScopeCard
+import com.cinescope.cinescope.presentation.components.rememberImagePickerLauncher
 import com.cinescope.cinescope.presentation.theme.Spacing
 import com.cinescope.cinescope.presentation.theme.CineScopeTheme
 import org.koin.compose.viewmodel.koinViewModel
@@ -45,6 +46,10 @@ fun SettingsScreen(
 
     LaunchedEffect(uiState.userProfile.name) {
         nameInput = uiState.userProfile.name ?: ""
+    }
+
+    val imagePickerLauncher = rememberImagePickerLauncher { imagePath ->
+        imagePath?.let { viewModel.updateProfilePicture(it) }
     }
 
     Column(
@@ -85,7 +90,7 @@ fun SettingsScreen(
                             .clip(CircleShape)
                             .border(3.dp, MaterialTheme.colorScheme.primary, CircleShape)
                             .clickable {
-                                // TODO: Implement image picker
+                                imagePickerLauncher.launch()
                             }
                     )
                 } else {
@@ -96,7 +101,7 @@ fun SettingsScreen(
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
                             .border(3.dp, MaterialTheme.colorScheme.primary, CircleShape)
                             .clickable {
-                                // TODO: Implement image picker
+                                imagePickerLauncher.launch()
                             },
                         contentAlignment = Alignment.Center
                     ) {
@@ -116,7 +121,7 @@ fun SettingsScreen(
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primary)
                         .clickable {
-                            // TODO: Implement image picker
+                            imagePickerLauncher.launch()
                         },
                     contentAlignment = Alignment.Center
                 ) {
