@@ -112,6 +112,7 @@ class MovieRepositoryImpl(
                 dateAdded = kotlinx.datetime.Instant.fromEpochMilliseconds(dbMovie.dateAdded)
             )
         } catch (e: Exception) {
+            println("Warning: Failed to fetch movie by TMDB ID $tmdbId: ${e.message}")
             null
         }
     }
@@ -164,6 +165,7 @@ class MovieRepositoryImpl(
         return try {
             database.cineScopeDatabaseQueries.getMovieCount().executeAsOne()
         } catch (e: Exception) {
+            println("Warning: Failed to get movie count from database: ${e.message}")
             0L
         }
     }
