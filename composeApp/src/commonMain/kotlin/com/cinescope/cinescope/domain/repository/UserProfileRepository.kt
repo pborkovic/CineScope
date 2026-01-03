@@ -1,5 +1,6 @@
 package com.cinescope.cinescope.domain.repository
 
+import com.cinescope.cinescope.domain.model.ThemePreference
 import com.cinescope.cinescope.domain.model.UserProfile
 import com.cinescope.cinescope.domain.util.Result
 import kotlinx.coroutines.flow.Flow
@@ -8,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
  * Repository interface for user profile data access and management.
  *
  * Manages the persistence and retrieval of user profile information including
- * name and profile picture. Supports a single user profile per application.
+ * name, profile picture, and theme preference. Supports a single user profile per application.
  *
  * @see UserProfile
  */
@@ -38,6 +39,14 @@ interface UserProfileRepository {
      * @return Result.Success on successful update, or Result.Error on failure
      */
     suspend fun updateUserProfilePicture(path: String): Result<Unit>
+
+    /**
+     * Updates the user's theme preference.
+     *
+     * @param themePreference The new theme preference
+     * @return Result.Success on successful update, or Result.Error on failure
+     */
+    suspend fun updateThemePreference(themePreference: ThemePreference): Result<Unit>
 
     /**
      * Saves or updates the complete user profile.
