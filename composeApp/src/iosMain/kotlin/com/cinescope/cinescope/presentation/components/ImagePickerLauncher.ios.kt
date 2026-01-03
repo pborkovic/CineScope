@@ -10,15 +10,15 @@ import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSUUID
 import platform.Foundation.NSUserDomainMask
 import platform.Foundation.writeToFile
-import platform.PhotosUI.PHPickerConfiguration
-import platform.PhotosUI.PHPickerResult
-import platform.PhotosUI.PHPickerViewController
-import platform.PhotosUI.PHPickerViewControllerDelegateProtocol
 import platform.UIKit.UIApplication
 import platform.UIKit.UIImage
 import platform.UIKit.UIImageJPEGRepresentation
+import platform.UIKit.UIImagePickerController
+import platform.UIKit.UIImagePickerControllerDelegateProtocol
+import platform.UIKit.UIImagePickerControllerSourceType
+import platform.UIKit.UIImagePickerControllerOriginalImage
+import platform.UIKit.UINavigationControllerDelegateProtocol
 import platform.darwin.NSObject
-import platform.UniformTypeIdentifiers.UTTypeImage
 
 @OptIn(ExperimentalForeignApi::class)
 @Composable
@@ -28,41 +28,28 @@ actual fun rememberImagePickerLauncher(
     return remember {
         object : ImagePickerLauncher {
             override fun launch() {
-                val configuration = PHPickerConfiguration()
-                configuration.selectionLimit = 1
+                val picker = UIImagePickerController()
+                picker.sourceType = UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypePhotoLibrary
+                picker.allowsEditing = false
 
-                val picker = PHPickerViewController(configuration)
-                picker.delegate = object : NSObject(), PHPickerViewControllerDelegateProtocol {
-                    override fun picker(
-                        picker: PHPickerViewController,
-                        didFinishPicking: List<*>
+                picker.delegate = object : NSObject(),
+                    UIImagePickerControllerDelegateProtocol,
+                    UINavigationControllerDelegateProtocol {
+
+                    override fun imagePickerController(
+                        picker: UIImagePickerController,
+                        didFinishPickingMediaWithInfo: Map<Any?, *>
                     ) {
                         picker.dismissViewControllerAnimated(true, null)
 
-                        @Suppress("UNCHECKED_CAST")
-                        val results = didFinishPicking as? List<PHPickerResult>
+                        val image = didFinishPickingMediaWithInfo[UIImagePickerControllerOriginalImage] as? UIImage
+                        val savedPath = image?.let { saveImageToDocuments(it) }
+                        onImageSelected(savedPath)
+                    }
 
-                        if (results.isNullOrEmpty()) {
-                            onImageSelected(null)
-                            return
-                        }
-
-                        val result = results.first()
-                        val provider = result.itemProvider
-
-                        provider.loadDataRepresentationForTypeIdentifier(
-                            typeIdentifier = UTTypeImage.identifier,
-                            completionHandler = { data, error ->
-                                if (error != null || data == null) {
-                                    onImageSelected(null)
-                                    return@loadDataRepresentationForTypeIdentifier
-                                }
-
-                                val image = UIImage.imageWithData(data)
-                                val savedPath = image?.let { saveImageToDocuments(it) }
-                                onImageSelected(savedPath)
-                            }
-                        )
+                    override fun imagePickerControllerDidCancel(picker: UIImagePickerController) {
+                        picker.dismissViewControllerAnimated(true, null)
+                        onImageSelected(null)
                     }
                 }
 
