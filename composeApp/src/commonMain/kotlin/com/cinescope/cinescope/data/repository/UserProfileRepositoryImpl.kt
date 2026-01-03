@@ -3,6 +3,7 @@ package com.cinescope.cinescope.data.repository
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.cinescope.cinescope.data.local.database.CineScopeDatabase
+import com.cinescope.cinescope.domain.model.ThemePreference
 import com.cinescope.cinescope.domain.model.UserProfile
 import com.cinescope.cinescope.domain.repository.UserProfileRepository
 import com.cinescope.cinescope.domain.util.NetworkError
@@ -26,19 +27,18 @@ class UserProfileRepositoryImpl(
                         UserProfile(
                             id = it.id,
                             name = it.name,
-                            profilePicturePath = it.profilePicturePath
+                            profilePicturePath = it.profilePicturePath,
+                            themePreference = ThemePreference.fromString(it.themePreference)
                         )
-                    } ?: UserProfile() // Return default profile if none exists
+                    } ?: UserProfile()
                 }
         } catch (e: Exception) {
-            // If table doesn't exist or any error, return default profile as Flow
             kotlinx.coroutines.flow.flowOf(UserProfile())
         }
     }
 
     override suspend fun updateUserName(name: String): Result<Unit> {
         return try {
-            // Ensure profile exists first
             ensureProfileExists()
             database.cineScopeDatabaseQueries.updateUserName(name)
             Result.Success(Unit)
@@ -49,7 +49,6 @@ class UserProfileRepositoryImpl(
 
     override suspend fun updateUserProfilePicture(path: String): Result<Unit> {
         return try {
-            // Ensure profile exists first
             ensureProfileExists()
             database.cineScopeDatabaseQueries.updateUserProfilePicture(path)
             Result.Success(Unit)
@@ -58,11 +57,22 @@ class UserProfileRepositoryImpl(
         }
     }
 
+    override suspend fun updateThemePreference(themePreference: ThemePreference): Result<Unit> {
+        return try {
+            ensureProfileExists()
+            database.cineScopeDatabaseQueries.updateThemePreference(themePreference.name)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Error(NetworkError.Unknown(e.message ?: "Failed to update theme preference"))
+        }
+    }
+
     override suspend fun saveUserProfile(profile: UserProfile): Result<Unit> {
         return try {
             database.cineScopeDatabaseQueries.insertOrUpdateUserProfile(
                 name = profile.name,
-                profilePicturePath = profile.profilePicturePath
+                profilePicturePath = profile.profilePicturePath,
+                themePreference = profile.themePreference.name
             )
             Result.Success(Unit)
         } catch (e: Exception) {
@@ -76,11 +86,11 @@ class UserProfileRepositoryImpl(
             if (existing == null) {
                 database.cineScopeDatabaseQueries.insertOrUpdateUserProfile(
                     name = null,
-                    profilePicturePath = null
+                    profilePicturePath = null,
+                    themePreference = ThemePreference.SYSTEM.name
                 )
             }
         } catch (e: Exception) {
-            // Table might not exist yet, ignore
         }
     }
 }
