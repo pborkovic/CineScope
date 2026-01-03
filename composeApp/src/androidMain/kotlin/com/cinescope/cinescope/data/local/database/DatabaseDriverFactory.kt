@@ -9,7 +9,9 @@ actual class DatabaseDriverFactory(private val context: Context) {
         return AndroidSqliteDriver(
             schema = CineScopeDatabase.Schema,
             context = context,
-            name = "cinescope.db"
+            name = "cinescope.db",
+
+            callback = AndroidSqliteDriver.Callback(CineScopeDatabase.Schema)
         )
     }
 }
