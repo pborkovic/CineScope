@@ -9,5 +9,9 @@
             <key>NSAllowsArbitraryLoads</key>
             <true/>
         </dict>
+        <key>NSPhotoLibraryUsageDescription</key>
+        <string>CineScope needs access to your photo library to let you select a profile picture.</string>
+        <key>NSPhotoLibraryAddUsageDescription</key>
+        <string>CineScope needs permission to save your profile picture.</string>
     </dict>
 </plist>
