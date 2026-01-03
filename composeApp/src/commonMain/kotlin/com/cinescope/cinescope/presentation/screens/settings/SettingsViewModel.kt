@@ -2,6 +2,7 @@ package com.cinescope.cinescope.presentation.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cinescope.cinescope.domain.model.ThemePreference
 import com.cinescope.cinescope.domain.model.UserProfile
 import com.cinescope.cinescope.domain.repository.UserProfileRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -58,7 +59,6 @@ class SettingsViewModel(
             try {
                 userProfileRepository.updateUserName(name)
             } catch (e: Exception) {
-                // Ignore errors for now
             }
         }
     }
@@ -68,7 +68,15 @@ class SettingsViewModel(
             try {
                 userProfileRepository.updateUserProfilePicture(path)
             } catch (e: Exception) {
-                // Ignore errors for now
+            }
+        }
+    }
+
+    fun updateThemePreference(themePreference: ThemePreference) {
+        viewModelScope.launch {
+            try {
+                userProfileRepository.updateThemePreference(themePreference)
+            } catch (e: Exception) {
             }
         }
     }
